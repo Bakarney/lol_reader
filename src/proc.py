@@ -120,22 +120,22 @@ def process(summoners_mode, summoners_output,
                      {const.region: {const.queue: {tier: [division
                                                           for division in const.divisions]
                                                    for tier in const.tiers}}})
-    summoners = read_struct(summoners_output)
-    summoners = flatten(summoners)
 
     if details_mode != "skip":
+        summoners = read_struct(summoners_output)
+        summoners = flatten(summoners)
         request_data("summoners details", details_mode, details_output, watcher.summoner.by_name,
                      {const.region: [i["summonerName"] for i in summoners]})
-    details = read_struct(details_output)
-    details = flatten(details)
 
     if games_ids_mode != "skip":
+        details = read_struct(details_output)
+        details = flatten(details)
         request_data("games ids", games_ids_mode, games_ids_output, watcher.match.matchlist_by_puuid,
                      {const.region: [i["puuid"] for i in details]}, {"type": "ranked"})
-    games_ids = read_struct(games_ids_output)
-    games_ids = flatten(games_ids)
-    games_ids = deduplicate(games_ids)
 
     if games_mode != "skip":
+        games_ids = read_struct(games_ids_output)
+        games_ids = flatten(games_ids)
+        games_ids = deduplicate(games_ids)
         request_data("games data", games_mode, games_output, watcher.match.by_id,
                      {const.region: [i for i in games_ids]})
