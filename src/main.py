@@ -17,8 +17,6 @@ if __name__ == '__main__':
     parser.add_argument("--games_output", "-go", default="../results/games")
     parser.add_argument("--extended_summoners_mode", "-esm", choices=modes, default=default_mode)
     parser.add_argument("--extended_summoners_output", "-eso", default="../results/extended_summoners")
-    parser.add_argument("--extended_entries_mode", "-eem", choices=modes, default=default_mode)
-    parser.add_argument("--extended_entries_output", "-eeo", default="../results/extended_entries")
 
     args = parser.parse_args()
     entries_mode = args.entries_mode
@@ -31,8 +29,6 @@ if __name__ == '__main__':
     games_output = args.games_output
     extended_summoners_mode = args.extended_summoners_mode
     extended_summoners_output = args.extended_summoners_output
-    extended_entries_mode = args.extended_entries_mode
-    extended_entries_output = args.extended_entries_output
 
     print()
     print("Entries_mode:", entries_mode)
@@ -45,13 +41,10 @@ if __name__ == '__main__':
     print("Games_output", games_output)
     print("Extended_summoners_mode", extended_summoners_mode)
     print("Extended_summoners_output", extended_summoners_output)
-    print("Extended_entries_mode", extended_entries_mode)
-    print("Extended_entries_output", extended_entries_output)
     print()
 
     proc.process(entries_mode, entries_output,
                  summoners_mode, summoners_output,
                  games_ids_mode, games_ids_output,
                  games_mode, games_output,
-                 extended_summoners_mode, extended_summoners_output,
-                 extended_entries_mode, extended_entries_output)
+                 extended_summoners_mode, extended_summoners_output)

@@ -35,9 +35,11 @@ class ChiefWatcher:
         watcher = self.get_watcher()
         return watcher.match.by_id(*args, **opt_params)
 
-    def entry_by_id(self, *args, **opt_params):
+    def entry_by_name(self, *args, **opt_params):
         watcher = self.get_watcher()
-        return watcher.league.by_summoner(*args, **opt_params)
+        summoner_id = watcher.summoner.by_name(*args, **opt_params)["id"]
+        response = watcher.league.by_summoner(args[0], summoner_id)
+        return response
 
 
 def read_struct(path: str) -> dict or list:
@@ -114,8 +116,9 @@ def request_data(set_name: str, mode: str, output: str, function, params, opt_pa
         except riotwatcher.ApiError as e:
             stat["not found"] += 1
             proc_bar.set_postfix_str(format_stat(stat))
-            with open("log.log", "a") as file:
+            with open("log.log", "a", encoding="utf-8") as file:
                 file.write(str(e) + "\n")
+                file.write("Params: " + str(params_set) + ", " + str(opt_params) + "\n")
                 file.write("-" * 100 + "\n")
 
     print("Requesting {} completed".format(set_name))
@@ -151,8 +154,7 @@ def process(entries_mode, entries_output,
             summoners_mode, summoners_output,
             games_ids_mode, games_ids_output,
             games_mode, games_output,
-            extended_summoners_mode, extended_summoners_output,
-            extended_entries_mode, extended_entries_output):
+            extended_summoners_mode, extended_summoners_output):
     chief = ChiefWatcher(*[riotwatcher.LolWatcher(i) for i in const.api_keys])
 
     if os.path.exists("log.log"):
@@ -183,34 +185,12 @@ def process(entries_mode, entries_output,
                      {const.region: games_ids[:10000]})
 
     if extended_summoners_mode != "skip":
-        source = summoners_output + "/" + const.region
-        destination = extended_summoners_output + "/" + const.region
-        destination_files = []
-        if os.path.exists(destination):
-            destination_files = os.listdir(destination)
-        else:
-            os.makedirs(destination)
-        for i in os.listdir(source):
-            if i not in destination_files:
-                shutil.copy(source + "/" + i, destination)
+        if extended_summoners_mode == "overwrite" and os.path.exists(extended_summoners_output):
+            shutil.rmtree(extended_summoners_output)
 
         games_data = read_struct(games_output)
         participants = [j["summonerName"] for i in games_data[const.region].values()
                         for j in i["info"]["participants"]]
         participants = deduplicate(participants)
-        request_data("extended summoners", extended_summoners_mode, extended_summoners_output, chief.account_by_name,
+        request_data("extended summoners", extended_summoners_mode, extended_summoners_output, chief.entry_by_name,
                      {const.region: participants})
-
-    if extended_entries_mode != "skip":
-        # entries = read_struct(entries_output)
-        # entries = unpack(entries)
-        # for i in entries:
-        #     path = extended_entries_output + "/" + const.region + "/" + i["summonerId"] + ".json"
-        #     if not os.path.exists(path):
-        #         write_json(i, path)
-
-        summoners = read_struct(extended_summoners_output)
-        summoners = unpack(summoners)
-        summoners_ids = [i["id"] for i in summoners]
-        request_data("extended entries", extended_entries_mode, extended_entries_output, chief.entry_by_id,
-                     {const.region: summoners_ids})
