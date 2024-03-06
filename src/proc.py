@@ -1,5 +1,5 @@
 from tqdm import tqdm
-import riotwatcher
+from riotwatcher import LolWatcher, ApiError
 import json
 import os
 import shutil
@@ -8,12 +8,12 @@ import const
 
 
 class ChiefWatcher:
-    def __init__(self, *watchers, **kwargs):
+    def __init__(self, *watchers: LolWatcher, **kwargs):
         super().__init__(**kwargs)
         self.watcher_pool = watchers
         self.queue = -1
 
-    def get_watcher(self):
+    def get_watcher(self) -> LolWatcher:
         self.queue += 1
         if self.queue >= len(self.watcher_pool):
             self.queue = 0
@@ -113,7 +113,7 @@ def request_data(set_name: str, mode: str, output: str, function, params, opt_pa
             write_json(response, path)
             stat["found"] += 1
             proc_bar.set_postfix_str(format_stat(stat))
-        except riotwatcher.ApiError as e:
+        except ApiError as e:
             stat["not found"] += 1
             proc_bar.set_postfix_str(format_stat(stat))
             with open("log.log", "a", encoding="utf-8") as file:
@@ -155,7 +155,7 @@ def process(entries_mode, entries_output,
             games_ids_mode, games_ids_output,
             games_mode, games_output,
             extended_summoners_mode, extended_summoners_output):
-    chief = ChiefWatcher(*[riotwatcher.LolWatcher(i) for i in const.api_keys])
+    chief = ChiefWatcher(*[LolWatcher(i) for i in const.api_keys])
 
     if os.path.exists("log.log"):
         os.remove("log.log")
@@ -166,7 +166,7 @@ def process(entries_mode, entries_output,
                                                    for tier in const.tiers}}})
 
     if summoners_mode != "skip":
-        summoners = read_struct(summoners_output)
+        summoners = read_struct(entries_output)
         summoners = unpack(summoners)
         request_data("summoners", summoners_mode, summoners_output, chief.account_by_name,
                      {const.region: [i["summonerName"] for i in summoners]})
